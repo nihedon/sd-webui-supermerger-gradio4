@@ -53,13 +53,13 @@ class GenParamGetter(scripts.Script):
 
     def get_params_components(demo: gr.Blocks, app):
         for _id, _is_txt2img in zip([GenParamGetter.txt2img_gen_button._id, GenParamGetter.img2img_gen_button._id], [True, False]):
-            dependencies: list[dict] = [x for x in demo.dependencies if x["trigger"] == "click" and _id in x["targets"]]
+            dependencies: list[dict] = [x for x in demo.fns.values() if x.targets[0][0] == _id]
             dependency: dict = None
             cnet_dependency: dict = None
             UiControlNetUnit = None
             for d in dependencies:
-                if len(d["outputs"]) == 1:
-                    outputs = GenParamGetter.get_components_by_ids(demo, d["outputs"])
+                if len(d.outputs) == 1:
+                    outputs = GenParamGetter.get_components_by_ids(demo, [o._id for o in d.outputs])
                     output = outputs[0]
                     if (
                         isinstance(output, gr.State)
@@ -68,10 +68,10 @@ class GenParamGetter(scripts.Script):
                         cnet_dependency = d
                         UiControlNetUnit = type(output.value)
 
-                elif len(d["outputs"]) == 4:
+                elif len(d.outputs) == 4:
                     dependency = d
 
-            params = [params for params in demo.fns if GenParamGetter.compare_components_with_ids(params.inputs, dependency["inputs"])]
+            params = [params for params in demo.fns.values() if GenParamGetter.compare_components_with_ids(params.inputs, [i._id for i in dependency.inputs])]
 
             from pprint import pprint
 

@@ -13,6 +13,7 @@ import torch.nn.functional as F
 from importlib import reload
 from pprint import pprint
 import gradio as gr
+from modules import ui_components
 from modules import (script_callbacks, sd_models,sd_vae, shared)
 from modules.scripts import basedir
 from modules.sd_models import checkpoints_loaded, load_model,unload_model_weights
@@ -37,17 +38,6 @@ path_root = basedir()
 xyzpath = os.path.join(path_root,"xyzpresets.json")
 
 CALCMODES  = ["normal", "cosineA", "cosineB","trainDifference","smoothAdd","smoothAdd MT","extract","tensor","tensor2","self","plus random"]
-
-class ResizeHandleRow(gr.Row):
-    """Same as gr.Row but fits inside gradio forms"""
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        self.elem_classes.append("resize-handle-row")
-
-    def get_block_name(self):
-        return "row"
 
 from typing import Union
 def network_reset_cached_weight(self: Union[torch.nn.Conv2d, torch.nn.Linear]):
@@ -87,9 +77,9 @@ def on_ui_tabs():
 
     if "ALLR" not in weights_presets: weights_presets += ADDRAND
 
-    with gr.Blocks() as supermergerui:
+    with gr.Blocks(analytics_enabled=False) as supermergerui:
         with gr.Tab("Merge"):
-            with ResizeHandleRow(equal_height=False):
+            with ui_components.ResizeHandleRow(equal_height=False):
                 with gr.Column(variant="compact"):
                     gr.HTML(value="<p>Merge models and load it for generation</p>")
 
@@ -154,14 +144,14 @@ def on_ui_tabs():
                                 with gr.Tab("Weights for alpha"):
                                     with gr.Row(variant="compact"):
                                         weights_a = gr.Textbox(label="BASE,IN00,IN02,...IN11,M00,OUT00,...,OUT11",value = "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5", show_copy_button=True)
-                                    with gr.Row(scale=2):
+                                    with gr.Row():
                                         setalpha = gr.Button(elem_id="copytogen", value="↑ Set alpha",variant='primary', scale=3)
                                         readalpha = gr.Button(elem_id="copytogen", value="↓ Read alpha",variant='primary', scale=3)
                                         setx = gr.Button(elem_id="copytogen", value="↑ Set X", min_width="80px", scale=1)
                                 with gr.Tab("beta"):
                                     with gr.Row(variant="compact"):
                                         weights_b = gr.Textbox(label="BASE,IN00,IN02,...IN11,M00,OUT00,...,OUT11",value = "0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2", show_copy_button=True)
-                                    with gr.Row(scale=2):
+                                    with gr.Row():
                                         setbeta = gr.Button(elem_id="copytogen", value="↑ Set beta",variant='primary', scale=3)
                                         readbeta = gr.Button(elem_id="copytogen", value="↓ Read beta",variant='primary', scale=3)
                                         sety = gr.Button(elem_id="copytogen", value="↑ Set Y", min_width="80px", scale=1)
