@@ -24,5 +24,7 @@ submit_result = None
 imagegal = None
 numaframe = None
 
+clear_alert_button = None
+
 txt2img_params = []
 img2img_params = []

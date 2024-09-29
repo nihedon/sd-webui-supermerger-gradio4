@@ -157,6 +157,7 @@ class GenParamGetter(scripts.Script):
                     inputs=[*components.txt2img_params],
                     outputs=components.sml_loranames,
                 )
+                components.clear_alert_button.click(fn=None, js="()=>gradioApp().getElementById('supermerger_reload_alert').style.display='none'")
             GenParamGetter.events_assigned = True
 
 if __package__ == "GenParamGetter":

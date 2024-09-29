@@ -78,6 +78,10 @@ def on_ui_tabs():
     if "ALLR" not in weights_presets: weights_presets += ADDRAND
 
     with gr.Blocks(analytics_enabled=False) as supermergerui:
+        gr.HTML(value="<p class='surpermerger alert error'> \
+            This page needs to be reloaded. Please press the F5 key.</p>", elem_id="supermerger_reload_alert")
+        components.clear_alert_button = gr.Button(elem_id="surpermerger_clear_alert", visible=False)
+
         with gr.Tab("Merge"):
             with ui_components.ResizeHandleRow(equal_height=False):
                 with gr.Column(variant="compact"):

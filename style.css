@@ -5,3 +5,11 @@ button.reset {
 button.compact_button {
     min-width: min(100px,100%);
 }
+
+.surpermerger.alert.error {
+    text-align: center;
+    color: var(--error-text-color);
+    font-size: var(--text-lg);
+    border: var(--error-border-width) solid var(--error-border-color);
+    background-color: var(--error-background-fill);
+}
