@@ -386,6 +386,9 @@ def lmerge(loranames,loraratioss,settings,filename,dim,save_precision,calc_preci
                 print("ERROR:Number of Blocks must be 12,17,20,26")
                 ratio = [float(n[1])]*26
             c_lora = lora.available_loras.get(n[0], None) 
+            if c_lora is None:
+                c_lora = lora.available_lora_aliases.get(n[0], None)
+
             ln.append(c_lora.filename)
             lr.append(ratio)
             d, t, s = dimgetter(c_lora.filename)
@@ -1124,9 +1127,9 @@ def blockfromkey(key,keylist,isv2 = False):
     elif "lora_te1_text_model" in fullkey:
         fullkey = fullkey.replace("lora_te1_text_model", "0_transformer_text_model")
     
+    if "1_model_transformer_resblocks_" in fullkey:return 0
     for i,n in enumerate(keylist):
         if n in  fullkey: return i
-    if "1_model_transformer_resblocks_" in fullkey:return 0
     print(f"ERROR:Block is not deteced:{fullkey}")
     return 0
 

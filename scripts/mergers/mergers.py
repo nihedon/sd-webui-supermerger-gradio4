@@ -20,11 +20,10 @@ from tqdm import tqdm
 from functools import partial
 from torch import Tensor, lerp
 from torch.nn.functional import cosine_similarity, relu, softplus
-from modules import shared, processing, sd_models, sd_vae, images, sd_samplers, scripts,devices, extras
+from modules import shared, processing, sd_vae, images, sd_samplers, scripts,devices, extras
 from modules.ui import  plaintext_to_html
 from modules.shared import opts
 from modules.processing import create_infotext,Processed
-from modules.sd_models import  load_model,unload_model_weights
 from modules.generation_parameters_copypaste import create_override_settings_dict
 from scripts.mergers.model_util import filenamecutter,savemodel
 from math import ceil
@@ -41,10 +40,15 @@ except:
     ui_version = 100
 
 try:
-    from ldm_patched.modules import model_management
+    from modules_forge import forge_version
     forge = True
+    from backend import memory_management
+    from scripts.compatible.forge import sd_models
+    from scripts.compatible.forge.sd_models import  load_model,unload_model_weights
 except:
     forge = False
+    from modules import sd_models
+    from modules.sd_models import  load_model,unload_model_weights
 
 orig_cache = 0
 
@@ -1474,9 +1478,8 @@ def casterr(*args,hear=hear):
 ##### forge
 def unload_forge():
     sd_models.model_data.sd_model = None
-    sd_models.model_data.loaded_sd_models = []
-    model_management.unload_all_models()
-    model_management.soft_empty_cache()
+    memory_management.unload_all_models()
+    memory_management.soft_empty_cache()
     gc.collect()
 
 def reload_model_weights():
