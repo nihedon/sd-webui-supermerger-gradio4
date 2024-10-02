@@ -125,18 +125,16 @@ def smergegen(weights_a,weights_b,model_a,model_b,model_c,base_alpha,base_beta,m
 
     checkpoint_info = sd_models.get_closet_checkpoint_match(model_a)
 
-    if ui_version >= 150: checkpoint_info = fake_checkpoint_info(checkpoint_info,metadata,currentmodel)
+    if forge or ui_version >= 150: checkpoint_info = fake_checkpoint_info(checkpoint_info,metadata,currentmodel)
 
     save = True if SAVEMODES[0] in save_sets else False
 
     result = savemodel(theta_0,currentmodel,custom_name,save_sets,metadata) if save else "Merged model loaded:"+currentmodel
 
-    sd_models.model_data.__init__()
+    if not forge:
+        sd_models.model_data.__init__()
     load_model(checkpoint_info, already_loaded_state_dict=theta_0)
     cachedealer(False)
-
-    del theta_0
-    devices.torch_gc()
 
     debug = "debug" in save_sets
 
@@ -146,15 +144,24 @@ def smergegen(weights_a,weights_b,model_a,model_b,model_c,base_alpha,base_beta,m
         except:
             pass
 
+    if forge:
+        global last_merge_model_info
+        last_merge_model_info = (theta_0, checkpoint_info)
+
     if imggen :
         images = simggen(s_prompt,s_nprompt,s_steps,s_sampler,s_cfg,s_seed,s_w,s_h,s_batch_size,
                         genoptions,s_hrupscaler,s_hr2ndsteps,s_denois_str,s_hr_scale,
                         currentmodel,id_sets,modelid,
                         *txt2imgparams,debug = debug)
 
-        return result,currentmodel,*images[:4]
+        ret = result,currentmodel,*images[:4]
     else:
-        return result,currentmodel
+        ret = result,currentmodel
+
+    del theta_0
+    devices.torch_gc()
+
+    return ret
 
 def checkpointer_infomer(name):
     return sd_models.get_closet_checkpoint_match(name)
@@ -173,11 +180,24 @@ def fake_checkpoint_info(checkpoint_info,metadata,currentmodel):
 
     checkpoint_info.name = checkpoint_info.name_for_extra + ".safetensors"
     checkpoint_info.model_name = checkpoint_info.name_for_extra.replace("/", "_").replace("\\", "_")
-    checkpoint_info.title = f"{checkpoint_info.name} [{sha256[0:10]}]"
+    checkpoint_info.title = f"{checkpoint_info.name} [{sha256[:10]}]"
     checkpoint_info.metadata = metadata
 
     # for sd-webui  v1.5.x
     sd_models.checkpoints_list[checkpoint_info.title] = checkpoint_info
+
+    if forge:
+        checkpoint_info.hash = sha256[:8]
+        checkpoint_info.shorthash = sha256[:10]
+        checkpoint_info.short_title = f"{checkpoint_info.name} [{sha256[:10]}]"
+
+        from modules_forge import main_entry
+        unet_storage_dtype, _ = main_entry.forge_unet_storage_dtype_options.get(shared.opts.forge_unet_storage_dtype, (None, False))
+        sd_models.model_data.forge_loading_parameters = dict(
+            checkpoint_info=checkpoint_info,
+            additional_modules=shared.opts.forge_additional_modules,
+            unet_storage_dtype=unet_storage_dtype
+        )
 
         # force to set a new sha256 hash
     if c_cache is not None: 
@@ -1146,6 +1166,12 @@ def simggen(s_prompt,s_nprompt,s_steps,s_sampler,s_cfg,s_seed,s_w,s_h,s_batch_si
     else:       
         hr_sampler_name = "Use same sampler" if hr_sampler_index == 0 else  sd_samplers.samplers[hr_sampler_index+1].name
 
+    global last_merge_model_info
+    if forge and "last_merge_model_info" in globals() and len(last_merge_model_info):
+        merge_model, checkpoint_info = last_merge_model_info
+        sd_models.model_data.forge_loading_parameters['checkpoint_info'] = checkpoint_info
+        sd_models.forge_model_reload(deepcopy(merge_model))
+
     p = processing.StableDiffusionProcessingTxt2Img(
         sd_model=shared.sd_model,
         outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
@@ -1268,6 +1294,12 @@ def simggen(s_prompt,s_nprompt,s_steps,s_sampler,s_cfg,s_seed,s_w,s_h,s_batch_si
         processed.images.insert(0, grid)
         images.save_image(grid, opts.outdir_txt2img_grids, "grid", p.seed, p.prompt, opts.grid_format, info=infotext, short_filename=not opts.grid_extended_filename, p=p, grid=True)
     shared.state.end()
+
+    if forge and "last_merge_model_info" in globals() and len(last_merge_model_info):
+        checkpoint_info = sd_models.select_checkpoint()
+        sd_models.model_data.forge_loading_parameters['checkpoint_info'] = checkpoint_info
+        sd_models.forge_model_reload(sd_models.load_torch_file(checkpoint_info.filename))
+
     return processed.images,infotext,plaintext_to_html(processed.info), plaintext_to_html(processed.comments),p
 
 
@@ -1437,6 +1469,9 @@ def clearcache():
     global modelcache
     del modelcache
     modelcache = {}
+    global last_merge_model_info
+    del last_merge_model_info
+    last_merge_model_info = ()
     gc.collect()
     devices.torch_gc()
 

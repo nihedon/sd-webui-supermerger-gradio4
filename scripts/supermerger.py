@@ -134,8 +134,8 @@ def on_ui_tabs():
 
                     with gr.Row():
                         components.merge = gr.Button(elem_id="model_merger_merge", elem_classes=["compact_button"], value="Merge!",variant='primary')
-                        components.mergeandgen = gr.Button(elem_id="model_merger_merge", elem_classes=["compact_button"], value="Merge&Gen",variant='primary',interactive=False)
-                        components.gen = gr.Button(elem_id="model_merger_merge", elem_classes=["compact_button"], value="Gen",variant='primary',interactive=False)
+                        components.mergeandgen = gr.Button(elem_id="model_merger_merge", elem_classes=["compact_button"], value="Merge&Gen",variant='primary')
+                        components.gen = gr.Button(elem_id="model_merger_merge", elem_classes=["compact_button"], value="Gen",variant='primary')
                         stopmerge = gr.Button(elem_id="stopmerge", elem_classes=["compact_button"], value="Stop")
 
 
