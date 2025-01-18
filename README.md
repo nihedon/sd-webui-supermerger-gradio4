@@ -1,5 +1,3 @@
-### **The fork by hako-mikan has been updated to support the new Forge (Gradio 4), so this fork will be closed.**
-
 # SuperMerger
 - Model merge extention for [AUTOMATIC1111's stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) 
 - Merge models can be loaded directly for generation without saving
